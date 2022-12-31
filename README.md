@@ -6,7 +6,7 @@ pyspt is a simple terminal timer that uses the pomodoro technique.
 
 ## Usage
 
-```bash
+```
 $ python3 -m pyspt.py -h
 
 usage: pyspt.py [-h] [-p POMODORO] [-sb SHORT_BREAK] [-lb LONG_BREAK] [-lbi LONG_BREAK_INTERVAL]
