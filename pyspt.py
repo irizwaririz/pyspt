@@ -55,20 +55,18 @@ short_break_duration = args.short_break * 60
 long_break_duration = args.long_break * 60
 
 
-def create_timer_str(time_str, x_begin):
-    timer_str = ""
-    for row in range(5):  # Draw row by row
-        timer_str += " " * x_begin  # Start drawing after `x_begin` columns
+def draw_timer(stdscr, y_start, x_start, time_str):
+    for row in range(5):
+        timer_row_str = ""
         for character in time_str:  # For each row, draw each part of the characters
             if (
-                character == ":" and int(time_str[-1]) % 2
+                character == ":" and int(time_str[-1]) % 2 == 1
             ):  # Check if current seconds is odd or even
-                timer_str += tty_clock[" "][row]  # For the blinking ":" effect
+                timer_row_str += tty_clock[" "][row]  # For the blinking ":" effect
             else:
-                timer_str += tty_clock[character][row]
-            timer_str += " "
-        timer_str += "\n"
-    return timer_str
+                timer_row_str += tty_clock[character][row]
+            timer_row_str += " "
+        stdscr.addstr(y_start + row, x_start, timer_row_str)
 
 
 def main(stdscr):
@@ -89,7 +87,7 @@ def main(stdscr):
     )  # Length of timer is 30 columns wide -> start printing 15 cells to the left of the middle
 
     text = "Time to focus!"
-    text_start = x_mid - len(text)//2
+    text_start = x_mid - len(text) // 2
 
     stdscr.clear()
     stdscr.addstr(
@@ -101,9 +99,8 @@ def main(stdscr):
 
     while current_duration:
         time_str = time.strftime(TIME_FORMAT, time.gmtime(current_duration))
-        timer_str = create_timer_str(time_str, x_start)
 
-        stdscr.addstr(y_start, 0, timer_str)
+        draw_timer(stdscr, y_start, x_start, time_str)
         stdscr.refresh()
 
         current_duration -= 1
