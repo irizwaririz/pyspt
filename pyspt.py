@@ -2,6 +2,8 @@ import argparse
 import curses
 import threading
 import time
+from os import system
+from shutil import which
 
 # Timer UI taken from https://github.com/kontroll/pomato
 tty_clock = {
@@ -69,6 +71,11 @@ def draw_timer(stdscr, y_start, x_start, time_str):
         stdscr.addstr(y_start + row, x_start, timer_row_str)
 
 
+def beep():
+    if which("powershell.exe"):
+        system("powershell.exe '[console]::beep(1450,800)'")
+
+
 def main(stdscr):
     curses.curs_set(0)  # Hide cursor
     stdscr.nodelay(
@@ -131,4 +138,5 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
+    beep()
     curses.wrapper(main)
