@@ -89,11 +89,11 @@ def main(stdscr):
     )  # Length of timer is 30 columns wide -> start printing 15 cells to the left of the middle
 
     text = "Time to focus!"
-    text_start = (30 - len(text)) // 2
+    text_start = x_mid - len(text)//2
 
     stdscr.clear()
     stdscr.addstr(
-        y_start + timer_height + 1, x_start + text_start, text
+        y_start + timer_height + 1, text_start, text
     )  # Print just below the timer
     stdscr.refresh()
 
