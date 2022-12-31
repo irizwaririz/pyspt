@@ -2,24 +2,12 @@ import argparse
 import curses
 import threading
 import time
+from itertools import cycle
 from os import system
 from shutil import which
 
-# Timer UI taken from https://github.com/kontroll/pomato
-tty_clock = {
-    "0": ["██████", "██  ██", "██  ██", "██  ██", "██████"],
-    "1": ["    ██", "    ██", "    ██", "    ██", "    ██"],
-    "2": ["██████", "    ██", "██████", "██    ", "██████"],
-    "3": ["██████", "    ██", "██████", "    ██", "██████"],
-    "4": ["██  ██", "██  ██", "██████", "    ██", "    ██"],
-    "5": ["██████", "██    ", "██████", "    ██", "██████"],
-    "6": ["██████", "██    ", "██████", "██  ██", "██████"],
-    "7": ["██████", "    ██", "    ██", "    ██", "    ██"],
-    "8": ["██████", "██  ██", "██████", "██  ██", "██████"],
-    "9": ["██████", "██  ██", "██████", "    ██", "██████"],
-    ":": ["  ", "██", "  ", "██", "  "],
-    " ": ["  ", "░░", "  ", "░░", "  "],
-}
+from constants import TTY_CLOCK, TIME_FORMAT, TIMER_STATE_LIST, TIMER_TEXT
+
 
 parser = argparse.ArgumentParser(
     description="A simple terminal timer that uses the pomodoro technique.",
@@ -50,23 +38,27 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-TIME_FORMAT = "%M:%S"
-
 work_duration = args.work * 60
 short_break_duration = args.short_break * 60
 long_break_duration = args.long_break * 60
 
+TIMER_DURATION = {
+    "work": args.work * 60,
+    "short_break": args.short_break * 60,
+    "long_break": args.long_break * 60,
+}
+
 
 def draw_timer(stdscr, y_start, x_start, time_str):
-    for row in range(5):
+    for row in range(5):  # Draw the timer row by row
         timer_row_str = ""
         for character in time_str:  # For each row, draw each part of the characters
             if (
                 character == ":" and int(time_str[-1]) % 2 == 1
             ):  # Check if current seconds is odd or even
-                timer_row_str += tty_clock[" "][row]  # For the blinking ":" effect
+                timer_row_str += TTY_CLOCK[" "][row]  # For the blinking ":" effect
             else:
-                timer_row_str += tty_clock[character][row]
+                timer_row_str += TTY_CLOCK[character][row]
             timer_row_str += " "
         stdscr.addstr(y_start + row, x_start, timer_row_str)
 
@@ -76,16 +68,16 @@ def beep():
         system("powershell.exe '[console]::beep(1450,800)'")
 
 
-def main(stdscr):
-    curses.curs_set(0)  # Hide cursor
-    stdscr.nodelay(
-        True
-    )  # Make getch() non-blocking (returns curses.ERR when no input is ready yet)
+def get_midpoint(stdscr):
+    height, width = stdscr.getmaxyx()
+    y_mid = (height - 1) // 2
+    x_mid = (width - 1) // 2
 
-    timer_height = 5
-    timer_width = 30
-    y_mid = (curses.LINES - 1) // 2
-    x_mid = (curses.COLS - 1) // 2
+    return y_mid, x_mid
+
+
+def get_timer_xy_coords(stdscr, timer_height=5, timer_width=30):
+    y_mid, x_mid = get_midpoint(stdscr)
     y_start = (
         y_mid - timer_height // 2
     )  # Length of timer is 5 rows high -> start printing ~2 cells above the middle
@@ -93,25 +85,59 @@ def main(stdscr):
         x_mid - timer_width // 2
     )  # Length of timer is 30 columns wide -> start printing 15 cells to the left of the middle
 
-    text = "Time to focus!"
-    text_start = x_mid - len(text) // 2
+    return (y_start, x_start)
 
-    stdscr.clear()
-    stdscr.addstr(
-        y_start + timer_height + 1, text_start, text
-    )  # Print just below the timer
-    stdscr.refresh()
 
-    current_duration = work_duration
+def get_text_xy_coords(stdscr, text, timer_height=5, y_offset=0):
+    _, x_mid = get_midpoint(stdscr)
 
-    while current_duration:
-        time_str = time.strftime(TIME_FORMAT, time.gmtime(current_duration))
+    y_start = get_timer_xy_coords(stdscr, timer_height)[0] + timer_height + 1 + y_offset
+    x_start = x_mid - len(text) // 2
 
-        draw_timer(stdscr, y_start, x_start, time_str)
-        stdscr.refresh()
+    return (y_start, x_start)
 
-        current_duration -= 1
-        time.sleep(1)
+
+def main(stdscr):
+    curses.curs_set(0)  # Hide cursor
+
+    timer_height = 5
+    timer_width = 30
+    num_pomodoro = 0
+
+    for timer_state in cycle(TIMER_STATE_LIST):
+        text = TIMER_TEXT[timer_state]
+        num_pomodoro_text = "#" + str(num_pomodoro)
+        current_duration = TIMER_DURATION[timer_state]
+
+        while current_duration >= 0:
+            time_str = time.strftime(TIME_FORMAT, time.gmtime(current_duration))
+
+            stdscr.clear()
+            stdscr.addstr(
+                *get_text_xy_coords(stdscr, num_pomodoro_text, timer_height),
+                num_pomodoro_text
+            )  # Print number of pomodoros finished just below the timer
+            stdscr.addstr(
+                *get_text_xy_coords(stdscr, text, timer_height, 1), text
+            )  # Print current pomodoro state
+            draw_timer(
+                stdscr,
+                *get_timer_xy_coords(stdscr, timer_height, timer_width),
+                time_str
+            )
+            stdscr.move(0, 0)  # Move cursor away in case it's showing
+            stdscr.refresh()
+
+            current_duration -= 1
+            if current_duration >= 0:  # Don't sleep at the last second
+                curses.napms(1000)
+                # time.sleep(1)
+
+        if timer_state == "work":
+            num_pomodoro += 1
+
+        beep()
+        stdscr.getch()  # Wait for user keypress before starting next state
 
     # TODO: Work on threading timer and key input
     # def timer(current_duration):
@@ -138,5 +164,4 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
-    beep()
     curses.wrapper(main)
