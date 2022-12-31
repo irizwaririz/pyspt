@@ -16,19 +16,14 @@ TTY_CLOCK = {
 
 TIME_FORMAT = "%M:%S"
 
-TIMER_STATE_LIST = (
-    "work",
-    "short_break",
-    "work",
-    "short_break",
-    "work",
-    "short_break",
-    "work",
-    "long_break",
-)
+LONG_BREAK_INTERVAL = 3
 
 TIMER_TEXT = {
-    "work": "Time to focus!",
+    "pomodoro": "Time to focus!",
     "short_break": "Time for a short break!",
     "long_break": "Time for a long break!",
+    "pause": "Press <space> to start"
 }
+
+TIMER_HEIGHT = 5
+TIMER_WIDTH = 30
