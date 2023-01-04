@@ -116,9 +116,11 @@ def draw_help(stdscr):
 
 
 def draw_pause_text(stdscr):
+    # Delete help text
     height, _ = stdscr.getmaxyx()
-    stdscr.move(height - 3, 0)
-    stdscr.clrtoeol()
+    for y in range(1, 4):
+        stdscr.move(height - y, 0)
+        stdscr.clrtoeol()
 
     y, x = get_text_xy_coords(stdscr, TIMER_TEXT["pause"], -TIMER_HEIGHT - 1 - 2)
     stdscr.addstr(y, x, TIMER_TEXT["pause"])
