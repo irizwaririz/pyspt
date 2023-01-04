@@ -7,8 +7,7 @@ from os import system
 from queue import Empty, Queue
 from shutil import which
 
-from constants import (TIME_FORMAT, TIMER_HEIGHT, TIMER_TEXT, TIMER_WIDTH,
-                       TTY_CLOCK)
+from constants import TIME_FORMAT, TIMER_HEIGHT, TIMER_TEXT, TIMER_WIDTH, TTY_CLOCK
 
 parser = argparse.ArgumentParser(
     description="A simple terminal timer that uses the pomodoro technique.",
@@ -142,6 +141,7 @@ def main(stdscr):
             text = TIMER_TEXT[timer_state]
             num_pomodoro_text = "#" + str(num_pomodoro)
             current_duration = TIMER_DURATION[timer_state]
+            start_flag = True
 
             while current_duration >= 0:
                 time_str = time.strftime(TIME_FORMAT, time.gmtime(current_duration))
@@ -158,46 +158,48 @@ def main(stdscr):
                 stdscr.move(0, 0)  # Move cursor away in case it's showing
                 stdscr.refresh()
 
-                if current_duration == TIMER_DURATION[timer_state]:
+                if start_flag == True:
                     draw_pause_text(stdscr)
                     stdscr.refresh()
                     while True:
                         second_key = timer_control_queue.get()
                         if second_key == ord(" "):
+                            start_flag = False
+                            current_duration += 1
                             break
-
-                try:
-                    key = timer_control_queue.get(block=False)
-                    if key == ord(" "):
-                        draw_pause_text(stdscr)
-                        stdscr.refresh()
-                        while True:
-                            second_key = timer_control_queue.get()
-                            if second_key == ord(" "):
-                                break
-                    elif key == ord("\n"):
-                        break
-                    elif key == ord("1"):
-                        timer_state = "pomodoro"
-                        goto_flag = True
-                        break
-                    elif key == ord("2"):
-                        timer_state = "short_break"
-                        goto_flag = True
-                        break
-                    elif key == ord("3"):
-                        timer_state = "long_break"
-                        goto_flag = True
-                        break
-                except Empty:
-                    pass
+                else:
+                    try:
+                        key = timer_control_queue.get(
+                            timeout=1
+                        )  # This is where the 1 second "sleep" comes from
+                        if key == ord(" "):
+                            draw_pause_text(stdscr)
+                            stdscr.refresh()
+                            while True:
+                                second_key = timer_control_queue.get()
+                                if second_key == ord(" "):
+                                    current_duration += 1
+                                    break
+                        elif key == ord("\n"):
+                            break
+                        elif key == ord("1"):
+                            timer_state = "pomodoro"
+                            goto_flag = True
+                            break
+                        elif key == ord("2"):
+                            timer_state = "short_break"
+                            goto_flag = True
+                            break
+                        elif key == ord("3"):
+                            timer_state = "long_break"
+                            goto_flag = True
+                            break
+                    except Empty:
+                        pass
 
                 current_duration -= 1
 
-                if current_duration >= 0:  # Don't sleep at the last second
-                    curses.napms(1000)
-
-            if goto_flag == True:
+            if goto_flag == True:  # Skip changing pomodoro state
                 goto_flag = False
                 continue
 
