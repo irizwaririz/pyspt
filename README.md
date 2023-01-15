@@ -14,9 +14,9 @@ $ pip install pythonspt
 ## Usage
 
 ```
-$ python3 -m pyspt.py -h
+$ pyspt -h
 
-usage: pyspt.py [-h] [-p POMODORO] [-sb SHORT_BREAK] [-lb LONG_BREAK] [-lbi LONG_BREAK_INTERVAL]
+usage: pyspt [-h] [-p POMODORO] [-sb SHORT_BREAK] [-lb LONG_BREAK] [-lbi LONG_BREAK_INTERVAL]
 
 A simple terminal timer that uses the pomodoro technique.
 
