@@ -1,2 +1,8 @@
-black
-isort
+# Development
+black  # format code
+isort  # sort imports
+
+# Distribution
+build  # build distributions packages (frontend)
+setuptools  # build backend
+twine  # upload distribution packages to PyPI
