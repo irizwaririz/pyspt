@@ -1,8 +1,15 @@
 # pyspt - python simple pomodoro timer
+[![PyPI version](https://badge.fury.io/py/pythonspt.svg)](https://badge.fury.io/py/pythonspt)
 
 pyspt is a simple terminal timer that uses the pomodoro technique.
 
 ![screenshot](https://github.com/irizwaririz/pyspt/raw/main/screenshot.png)
+
+## Installation
+
+```
+$ pip install pythonspt
+```
 
 ## Usage
 
