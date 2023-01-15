@@ -226,9 +226,12 @@ def main(stdscr):
     timer_thread.join()
     timer_control_thread.join()
 
-
-if __name__ == "__main__":
+def console_script():
     try:
         curses.wrapper(main)
     except KeyboardInterrupt:
         pass
+
+
+if __name__ == "__main__":
+    console_script()
